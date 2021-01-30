@@ -39,6 +39,28 @@ class ActivationSoftmax:
         self.output = probabilities
 
 
+class Loss:  # Common loss class
+    def calculate(self, output, y):
+        # calculate sample losses
+        sample_losses = self.forward(output, y)
+        # calculate mean loss
+        data_loss = np.mean(sample_losses)
+        return data_loss
+
+
+class LossCategoricalCrossEntropy(Loss):
+    def forward(self, y_pred, y_true):  # forward pass
+        samples = len(y_pred)  # number of samples in a batch
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)  # clip data to prevent division by 0
+        if len(y_true.shape) == 1:  # if labels are categorical (e.g. [1],[4])
+            correct_confidences = y_pred_clipped[range(samples), y_true]
+        elif len(y_true.shape) == 2:  # if labels are one-hot encoded (e.g. [1, 0, 0])
+            correct_confidences = np.sum(y_pred_clipped*y_true, axis=1)
+        negative_log_likelihoods = -np.log(correct_confidences)
+        return negative_log_likelihoods
+
+
+
  #%% Execution
 X, y = spiral_data(samples=100, classes=3)  # 300 samples of 2-dimensional data
 
@@ -54,11 +76,17 @@ dense2 = LayerDense(n_inputs=3, n_neurons=3)
 # Create Softmax for output
 activation2 = ActivationSoftmax()
 
+# Create loss function
+loss_function = LossCategoricalCrossEntropy()
+
 # Apply forward pass
 dense1.forward(X)
 activation1.forward(dense1.output)
 dense2.forward(activation1.output)
 activation2.forward(dense2.output)
-print(activation2.output[:5])
+
+# calulcate loss
+loss = loss_function.calculate(activation2.output, y=y)
+print('loss:', loss)
 
 
