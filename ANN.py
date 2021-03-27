@@ -13,18 +13,35 @@ class LayerDense:
         # sample (n, n,) numbers from Gaussian distribution with center=0, variance=1, and multiply to make smaller
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
-        self.output = 0  # Initialize variable
+        # Initialize variables
+        self.output, self.inputs, self.dweights, self.dbiases, self.dinputs = None
 
     def forward(self, inputs):
+        self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
+
+    def backward(self, dvalues):
+        # Gradients on parameters
+        self.dweights = np.dot(self.inputs.T, dvalues)
+        self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+        # Gradients on values
+        self.dinputs = np.dot(dvalues, self.weights.T)
 
 
 class ActivationRelu:
     def __init__(self):
-        self.output = None
+        # Initialize variables
+        self.output, self.inputs, self.dinputs  = None
 
     def forward(self, inputs):
+        self.inputs = inputs
         self.output = np.maximum(0, inputs)
+
+    def backward(self, dvalues):
+        # Make a copy of the values
+        self.dinputs = dvalues.copy()
+        # Zero gradient wher input values were negative
+        self.dinputs[self.inputs <= 0] = 0
 
 
 class ActivationSoftmax:
@@ -60,8 +77,7 @@ class LossCategoricalCrossEntropy(Loss):
         return negative_log_likelihoods
 
 
-
- #%% Execution
+#%% Execution
 X, y = spiral_data(samples=100, classes=3)  # 300 samples of 2-dimensional data
 
 # Create dense layer with 2 input features and 3 output values
