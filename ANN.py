@@ -46,7 +46,7 @@ class ActivationRelu:
 
 class ActivationSoftmax:
     def __init__(self):
-        self.output = None
+        self.output, self.dinputs = None
 
     def forward(self, inputs):
         # get un-normalized probabilities
@@ -54,6 +54,18 @@ class ActivationSoftmax:
         # normalize them for each sample
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
+
+    def backward(self, dvalues):
+        # Create uninitialized array
+        self.dinputs = np.empty_like(dvalues)
+        # Enumerate outputs and graidents
+        for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
+            # Flatten output array
+            single_output = single_output.reshape(-1, 1)
+            # Calculate Jacobian matrix of the output
+            jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
+            # Calculate sample-wise gradients and add it to array of sample gradients
+            self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
 
 class Loss:  # Common loss class
@@ -66,6 +78,10 @@ class Loss:  # Common loss class
 
 
 class LossCategoricalCrossEntropy(Loss):
+    def __init__(self):
+        self.dinputs = None
+
+    @staticmethod
     def forward(self, y_pred, y_true):  # forward pass
         samples = len(y_pred)  # number of samples in a batch
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)  # clip data to prevent division by 0
@@ -75,6 +91,20 @@ class LossCategoricalCrossEntropy(Loss):
             correct_confidences = np.sum(y_pred_clipped*y_true, axis=1)
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
+
+    def backward(self, dvalues, y_true):
+        # Number of samples
+        samples = len(dvalues)
+        # Number of label in every sample
+        labels = len(dvalues[0])
+        # if labels are sparse, turn into one-hot vector
+        if len(y_true.shape) == 1:
+            y_true = np.eye(labels)[y_true]
+        # Calculate the gradient
+        self.dinputs = -y_true / dvalues
+        # Normalize gradient
+        self.dinputs = self.dinputs / samples
+
 
 
 #%% Execution
