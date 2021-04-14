@@ -1,4 +1,4 @@
-# NeuralNetworkFromScratch
+# Neural Networks From Scratch
 
 This repository present the code implementation of a neural network in Python. 
 Credits go to the authors of the wonderful eponymous book, which can be found [here](https://nnfs.io/ "NNFS").
