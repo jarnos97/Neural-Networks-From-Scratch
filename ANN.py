@@ -7,7 +7,6 @@ from nnfs.datasets import spiral_data
 nnfs.init()
 
 
-#%% Dense layer
 class LayerDense:
     def __init__(self, n_inputs, n_neurons):
         # sample (n, n,) numbers from Gaussian distribution with center=0, variance=1, and multiply to make smaller
@@ -134,47 +133,62 @@ class ActivationSoftmaxLossCategoricalCrossentropy():
         self.dinputs = self.dinputs / samples
 
 
-#%% Execution
+class OptimizerSGD():
+    def __init__(self, learning_rate=1.0):
+        self.learning_rate = learning_rate
+
+    def update_params(self, layer):
+        layer.weights += -self.learning_rate * layer.dweights  # dweights = gradients
+        layer.biases += -self.learning_rate * layer.dbiases
+
+
+# Setting values and initializing classes
 X, y = spiral_data(samples=100, classes=3)  # 300 samples of 2-dimensional data
 
 # Create dense layer with 2 input features and 3 output values
-dense1 = LayerDense(n_inputs=2, n_neurons=3)
+dense1 = LayerDense(n_inputs=2, n_neurons=64)
 
 # Create RELU for dense layers
 activation1 = ActivationRelu()
 
 # Create second dense layer with 3 input features and 3 output values
-dense2 = LayerDense(n_inputs=3, n_neurons=3)
+dense2 = LayerDense(n_inputs=64, n_neurons=3)
 
 # Create Softmax classifier's combined loss and activation
 loss_activation = ActivationSoftmaxLossCategoricalCrossentropy()
 
-# Apply forward pass
-dense1.forward(X)
-activation1.forward(dense1.output)
-dense2.forward(activation1.output)
+# Create optimizer object
+optimizer = OptimizerSGD()
 
-# Perform forward pass through the activation/loss function (returns loss)
-loss = loss_activation.forward(dense2.output, y)
-print(loss_activation.output[:5])  # Output of the first few samples
-print(f"Loss: {loss}")
+# Execute
+for epoch in range(10001):
+    # Apply forward pass
+    dense1.forward(X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    # Perform forward pass through the activation/loss function (returns loss)
+    loss = loss_activation.forward(dense2.output, y)
 
-# Calculating accuracy
-predictions = np.argmax(loss_activation.output, axis=1)
-if len(y.shape) == 2:  # convert if one-hot encoded
-    y = np.argmax(y, axis=1)
-accuracy = np.mean(predictions == y)
-print(f"Accuracy: {accuracy}")
+    # Calculating accuracy
+    predictions = np.argmax(loss_activation.output, axis=1)
+    if len(y.shape) == 2:  # convert if one-hot encoded
+        y = np.argmax(y, axis=1)
+    accuracy = np.mean(predictions == y)
 
-# Backward pass
-loss_activation.backward(loss_activation.output, y)
-dense2.backward(loss_activation.dinputs)
-activation1.backward(dense2.dinputs)
-dense1.backward(activation1.dinputs)
+    # Print results every 100 epochs
+    if not epoch % 100:
+        print(f"epoch: {epoch}, " +
+              f"acc: {accuracy:.3f}, " +
+              f"loss: {loss:.3f}"
+              )
 
-# Print gradients
-print(dense1.dweights)
-print(dense1.dbiases)
-print(dense2.dweights)
-print(dense2.dbiases)
+    # Backward pass
+    loss_activation.backward(loss_activation.output, y)
+    dense2.backward(loss_activation.dinputs)
+    activation1.backward(dense2.dinputs)
+    dense1.backward(activation1.dinputs)
+
+    # Update layer parameters
+    optimizer.update_params(dense1)
+    optimizer.update_params(dense2)
 
