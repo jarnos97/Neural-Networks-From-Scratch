@@ -3,6 +3,29 @@ from activation_functions import ActivationSoftmax
 
 
 class Loss:  # Common loss class
+    @staticmethod
+    def regularization_loss(layer):
+        # Default = 0
+        regularization_loss = 0
+
+        # L1 weights regularization
+        if layer.l1_weight > 0:
+            regularization_loss += layer.l1_weight * np.sum(np.abs(layer.weights))
+
+        # L1 bias regularization
+        if layer.l1_bias > 0:
+            regularization_loss += layer.l1_bias * np.sum(np.abs(layer.biases))
+
+        # L2 weights regularization
+        if layer.l2_weight > 0:
+            regularization_loss += layer.l2_weight * np.sum(layer.weights * layer.weights)
+
+        # L2 bias regularization
+        if layer.l2_bias > 0:
+            regularization_loss += layer.l2_bias * np.sum(layer.biases * layer.biases)
+
+        return regularization_loss
+
     def calculate(self, output, y):
         # calculate sample losses
         sample_losses = self.forward(output, y)
