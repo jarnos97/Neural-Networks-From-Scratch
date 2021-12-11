@@ -2,7 +2,7 @@
 import numpy as np
 import nnfs
 from nnfs.datasets import spiral_data
-from layers import LayerDense
+from layers import LayerDense, LayerDropout
 from activation_functions import ActivationRelu
 from loss import ActivationSoftmaxLossCategoricalCrossentropy
 from optimizers import OptimizerAdagrad, OptimizerRMSProp, OptimizerSGD, OptimizerAdam
@@ -20,21 +20,25 @@ dense1 = LayerDense(n_inputs=2, n_neurons=512, l2_weight=5e-4, l2_bias=5e-4)
 # Create RELU for dense layers
 activation1 = ActivationRelu()
 
+# Create dropout layer
+dropout1 = LayerDropout(0.1)
+
 # Create second dense layer with 3 input features and 3 output values
-dense2 = LayerDense(n_inputs=64, n_neurons=3)
+dense2 = LayerDense(n_inputs=512, n_neurons=3)
 
 # Create Softmax classifier's combined loss and activation
 loss_activation = ActivationSoftmaxLossCategoricalCrossentropy()
 
 # Create optimizer object
-optimizer = OptimizerAdam(learning_rate=0.02, decay=5e-7)
+optimizer = OptimizerAdam(learning_rate=0.05, decay=5e-5)
 
 # Execute
 for epoch in range(10001):
     # Apply forward pass
     dense1.forward(X)
     activation1.forward(dense1.output)
-    dense2.forward(activation1.output)
+    dropout1.forward(activation1.output)
+    dense2.forward(dropout1.output)
 
     # Perform forward pass through the activation/loss function (returns loss)
     data_loss = loss_activation.forward(dense2.output, y)
@@ -65,7 +69,8 @@ for epoch in range(10001):
     # Backward pass
     loss_activation.backward(loss_activation.output, y)
     dense2.backward(loss_activation.dinputs)
-    activation1.backward(dense2.dinputs)
+    dropout1.backward(dense2.dinputs)
+    activation1.backward(dropout1.dinputs)
     dense1.backward(activation1.dinputs)
 
     # Update layer parameters
@@ -94,5 +99,7 @@ accuracy = np.mean(predictions == y_test)
 print(f"Test acc: {accuracy:.3f}, " +
       f"Test loss: {loss:.3f}")
 
-# TODO: what happens when we use tensors instead of numpy? For speed --> Naw, doesn't work that way.
-# TODO: Make a sequential-like function. To facilitate model creation.
+# TODO: If we want to try to execute on GPU, need to convert arrays to tensors
+# TODO: Make a sequential-like function! To facilitate model creation.
+# TODO: make bias optional
+# TODO: add different ways to initialize the weights

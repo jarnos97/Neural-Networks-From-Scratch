@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import ndarray
 
 
 class LayerDense:
@@ -47,3 +48,41 @@ class LayerDense:
 
         # Gradients on values
         self.dinputs = np.dot(dvalues, self.weights.T)
+
+
+class LayerDropout:
+    def __init__(self, rate):
+        # Store rate --> inverted as we need as success rate
+        self.rate = 1 - rate
+        self.inputs = self.output = self.binary_mask = self.dinputs = None
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        # Generate and save scaled mask
+        self.binary_mask = np.random.binomial(1, self.rate, size=inputs.shape) / self.rate
+        # Apply mask to output values
+        self.output = inputs * self.binary_mask
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * self.binary_mask
+
+
+class LayerGCNConv:
+    def __init__(self, n_inputs, n_neurons):
+        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+        self.biases = np.zeros((1, n_neurons))
+        # Initialize variables
+        self.output = self.a = self.h = self.dweights = self.dbiases = self.dinputs = None
+
+    def forward(self, a: ndarray, h: ndarray, weights) -> ndarray:
+        # Need to compute AHW + B
+        self.a = a
+        self.h = h
+        self.output = np.linalg.multi_dot(a, h, self.weights) + self.biases
+
+    def backward(self, dvalues) -> ndarray:
+        # Need to compute three gradients: input, weights, and biases
+        self.dweights = np.linalg.multi_dot([self.a, self.h, dvalues])
+        self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+        self.dinputs = np.linalg.multi_dot([self.a, dvalues, self.weights])
+        # TODO: some arrays might need to be inverted! Check on example dataset!
