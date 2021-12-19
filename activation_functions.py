@@ -41,3 +41,15 @@ class ActivationSoftmax:
             jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
             # Calculate sample-wise gradients and add it to array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
+
+
+class ActivationSigmoid:
+    def __init__(self):
+        self.inputs = self.output = self.dinputs = None
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1 - self.output) * self.output
