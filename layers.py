@@ -74,15 +74,16 @@ class LayerGCNConv:
         # Initialize variables
         self.output = self.a = self.h = self.dweights = self.dbiases = self.dinputs = None
 
-    def forward(self, a: ndarray, h: ndarray, weights) -> ndarray:
+    def forward(self, a: ndarray, h: ndarray) -> ndarray:
         # Need to compute AHW + B
         self.a = a
         self.h = h
-        self.output = np.linalg.multi_dot(a, h, self.weights) + self.biases
+        self.output = np.linalg.multi_dot([a, h, self.weights]) + self.biases
 
     def backward(self, dvalues) -> ndarray:
         # Need to compute three gradients: input, weights, and biases
-        self.dweights = np.linalg.multi_dot([self.a, self.h, dvalues])
+        self.dweights = np.dot(self.a, self.h)
+        self.dweights = np.dot(self.dweights.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
-        self.dinputs = np.linalg.multi_dot([self.a, dvalues, self.weights])
-        # TODO: some arrays might need to be inverted! Check on example dataset!
+        self.dinputs = np.dot(self.a, dvalues)
+        self.dinputs = np.dot(self.dinputs, self.weights.T)
