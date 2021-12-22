@@ -137,3 +137,4 @@ print(f'validation, acc: {accuracy:.3f}, loss: {loss:.3f}')
 # TODO: make bias optional
 # TODO: add different ways to initialize the weights
 # TODO: Make a base-class for our layers/activations/etc? Which require a forward and backward. Only if useful.
+# TODO: make a wrapper/decorator or similar for logging. Instead of printing outputs.
