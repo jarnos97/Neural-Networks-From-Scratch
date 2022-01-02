@@ -120,3 +120,26 @@ class LossBinaryCrossEntropy(Loss):
 
         # Normalize gradient
         self.dinputs = self.dinputs / samples
+
+
+class LossMeanSquaredError(Loss):
+    def __init__(self):
+        self.dinputs = None
+
+    @staticmethod
+    def forward(y_pred, y_true):
+        return np.mean((y_true - y_pred)**2, axis=-1)
+
+    def backward(self, dvalues, y_true):
+        # Number of samples
+        samples = len(dvalues)
+
+        # Number of outputs in every sample
+        outputs = len(dvalues[0])
+
+        # Calculate gradient
+        self.dinputs = -2 * (y_true - dvalues) / outputs
+
+        # Normalize gradient
+        self.dinputs = self.dinputs / samples
+

@@ -53,3 +53,16 @@ class ActivationSigmoid:
 
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
+
+
+class ActivationLinear:
+    def __init__(self):
+        self.inputs = self.output = self.dinputs = None
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = inputs
+
+    def backward(self, dvalues):
+        # derivative is 1, 1 * dvalues = dvalues
+        self.dinputs = dvalues.copy()
