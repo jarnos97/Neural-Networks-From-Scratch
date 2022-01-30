@@ -126,3 +126,4 @@ print(f"Test loss: {test_loss:.3f} Test accuracy: {test_accuracy:.3f}")
 #
 # print(f'validation, acc: {accuracy:.3f}, loss: {loss:.3f}')
 # # NOTE: It works!
+# TODO: adapt to work with new model

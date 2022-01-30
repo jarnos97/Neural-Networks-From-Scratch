@@ -16,7 +16,7 @@ class LayerDense:
         self.l2_weight = l2_weight
         self.l2_bias = l2_bias
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
 
@@ -56,7 +56,7 @@ class LayerDropout:
         self.rate = 1 - rate
         self.inputs = self.output = self.binary_mask = self.dinputs = None
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         # Generate and save scaled mask
         self.binary_mask = np.random.binomial(1, self.rate, size=inputs.shape) / self.rate
@@ -65,6 +65,14 @@ class LayerDropout:
 
     def backward(self, dvalues):
         self.dinputs = dvalues * self.binary_mask
+
+
+class LayerInput:
+    def __init__(self):
+        self.output = None
+
+    def forward(self, inputs, training):
+        self.output = inputs
 
 
 class LayerGCNConv:
@@ -87,3 +95,4 @@ class LayerGCNConv:
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(self.a, dvalues)
         self.dinputs = np.dot(self.dinputs, self.weights.T)
+    # TODO: adapt to work with new model

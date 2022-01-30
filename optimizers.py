@@ -2,7 +2,7 @@ import numpy as np
 
 
 class OptimizerSGD:
-    def __init__(self, learning_rate=1.0, decay=0.0, momentum=0):
+    def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, momentum: float = 0) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -41,7 +41,7 @@ class OptimizerSGD:
 
 
 class OptimizerAdagrad:
-    def __init__(self, learning_rate=1.0, decay=0.0, epsilon=1e-7):
+    def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, epsilon: float = 1e-7) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -73,7 +73,7 @@ class OptimizerAdagrad:
 
 
 class OptimizerRMSProp:
-    def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, rho=0.9):
+    def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, rho=0.9) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -106,7 +106,7 @@ class OptimizerRMSProp:
 
 
 class OptimizerAdam:
-    def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, beta_1=0.9, beta_2=0.999):
+    def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, beta_1=0.9, beta_2=0.999) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay

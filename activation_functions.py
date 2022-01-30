@@ -6,7 +6,7 @@ class ActivationRelu:
         # Initialize variables
         self.output = self.inputs = self.dinputs = None
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         self.output = np.maximum(0, inputs)
 
@@ -16,12 +16,16 @@ class ActivationRelu:
         # Zero gradient wher input values were negative
         self.dinputs[self.inputs <= 0] = 0
 
+    @staticmethod
+    def predictions(outputs):
+        return outputs
+
 
 class ActivationSoftmax:
     def __init__(self):
         self.output = self.dinputs = self.inputs = None
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         # Remember input values
         self.inputs = inputs
         # get un-normalized probabilities
@@ -42,27 +46,39 @@ class ActivationSoftmax:
             # Calculate sample-wise gradients and add it to array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
+    @staticmethod
+    def predictions(outputs):
+        return np.argmax(outputs, axis=1)
+
 
 class ActivationSigmoid:
     def __init__(self):
         self.inputs = self.output = self.dinputs = None
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
 
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
 
+    @staticmethod
+    def predictions(outputs):
+        return (outputs > 0.5) * 1
+
 
 class ActivationLinear:
     def __init__(self):
         self.inputs = self.output = self.dinputs = None
 
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         self.output = inputs
 
     def backward(self, dvalues):
         # derivative is 1, 1 * dvalues = dvalues
         self.dinputs = dvalues.copy()
+
+    @staticmethod
+    def predictions(outputs):
+        return outputs

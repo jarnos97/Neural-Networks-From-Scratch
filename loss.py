@@ -3,39 +3,50 @@ from activation_functions import ActivationSoftmax
 
 
 class Loss:  # Common loss class
-    @staticmethod
-    def regularization_loss(layer):
+    def __init__(self):
+        self.trainable_layers = None
+
+    def regularization_loss(self):
         # Default = 0
         regularization_loss = 0
 
-        # L1 weights regularization
-        if layer.l1_weight > 0:
-            regularization_loss += layer.l1_weight * np.sum(np.abs(layer.weights))
+        for layer in self.trainable_layers:
+            # L1 weights regularization
+            if layer.l1_weight > 0:
+                regularization_loss += layer.l1_weight * np.sum(np.abs(layer.weights))
 
-        # L1 bias regularization
-        if layer.l1_bias > 0:
-            regularization_loss += layer.l1_bias * np.sum(np.abs(layer.biases))
+            # L1 bias regularization
+            if layer.l1_bias > 0:
+                regularization_loss += layer.l1_bias * np.sum(np.abs(layer.biases))
 
-        # L2 weights regularization
-        if layer.l2_weight > 0:
-            regularization_loss += layer.l2_weight * np.sum(layer.weights * layer.weights)
+            # L2 weights regularization
+            if layer.l2_weight > 0:
+                regularization_loss += layer.l2_weight * np.sum(layer.weights * layer.weights)
 
-        # L2 bias regularization
-        if layer.l2_bias > 0:
-            regularization_loss += layer.l2_bias * np.sum(layer.biases * layer.biases)
+            # L2 bias regularization
+            if layer.l2_bias > 0:
+                regularization_loss += layer.l2_bias * np.sum(layer.biases * layer.biases)
 
         return regularization_loss
 
-    def calculate(self, output, y):
+    def remember_trainable_layers(self, trainable_layers):
+        self.trainable_layers = trainable_layers
+
+    def calculate(self, output, y, *, include_regularization=False):
         # calculate sample losses
         sample_losses = self.forward(output, y)
         # calculate mean loss
         data_loss = np.mean(sample_losses)
-        return data_loss
+
+        # If just data loss, return it
+        if not include_regularization:
+            return data_loss
+        return data_loss, self.regularization_loss()
 
 
 class LossCategoricalCrossEntropy(Loss):
     def __init__(self):
+        super().__init__()
         self.dinputs = None
 
     @staticmethod
@@ -65,15 +76,7 @@ class LossCategoricalCrossEntropy(Loss):
 
 class ActivationSoftmaxLossCategoricalCrossentropy:
     def __init__(self):
-        self.activation = ActivationSoftmax()
-        self.loss = LossCategoricalCrossEntropy()
-        self.output = self.dinputs = None
-
-    def forward(self, inputs, y_true):
-        self.activation.forward(inputs)
-        self.output = self.activation.output
-        # calculate and return loss
-        return self.loss.calculate(self.output, y_true)
+        self.dinputs = None
 
     def backward(self, dvalues, y_true):
         # Number of samples
@@ -91,6 +94,7 @@ class ActivationSoftmaxLossCategoricalCrossentropy:
 
 class LossBinaryCrossEntropy(Loss):
     def __init__(self):
+        super().__init__()
         self.dinputs = None
 
     @staticmethod
@@ -124,6 +128,7 @@ class LossBinaryCrossEntropy(Loss):
 
 class LossMeanSquaredError(Loss):
     def __init__(self):
+        super().__init__()
         self.dinputs = None
 
     @staticmethod
@@ -143,3 +148,25 @@ class LossMeanSquaredError(Loss):
         # Normalize gradient
         self.dinputs = self.dinputs / samples
 
+
+class LossMeanAbsoluteError(Loss):
+    def __init__(self):
+        super().__init__()
+        self.dinputs = None
+
+    @staticmethod
+    def forward(y_pred, y_true):
+        return np.mean(np.abs(y_true - y_pred), axis=-1)
+
+    def backward(self, dvalues, y_true):
+        # Number of samples
+        samples = len(dvalues)
+
+        # Number of outputs in every sample
+        outputs = len(dvalues[0])
+
+        # Calculate gradient
+        self.dinputs = np.sign(y_true - dvalues) / outputs
+
+        # Normalize gradient
+        self.dinputs = self.dinputs / samples
