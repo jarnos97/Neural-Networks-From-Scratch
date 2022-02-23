@@ -2,9 +2,26 @@ import numpy as np
 
 
 class Accuracy:
+    def __init__(self):
+        self.accumulated_sum = self.accumulated_count = None
+
     def calculate(self, predictions, y):
+        # Compare results and calculate accuracy
         comparisons = self.compare(predictions, y)
-        return np.mean(comparisons)
+        accuracy = np.mean(comparisons)
+
+        # Add cumulated sum of matching values and sample count
+        self.accumulated_sum += np.sum(comparisons)
+        self.accumulated_count += len(comparisons)
+        return accuracy
+
+    def calculate_accumulated(self):
+        accuracy = self.accumulated_sum / self.accumulated_count
+        return accuracy
+
+    def new_pass(self):
+        self.accumulated_sum = 0
+        self.accumulated_count = 0
 
 
 class AccuracyCategorical(Accuracy):

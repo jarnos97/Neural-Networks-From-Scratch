@@ -4,7 +4,7 @@ from activation_functions import ActivationSoftmax
 
 class Loss:  # Common loss class
     def __init__(self):
-        self.trainable_layers = None
+        self.trainable_layers = self.accumulated_sum = self.accumulated_count = None
 
     def regularization_loss(self):
         # Default = 0
@@ -35,13 +35,30 @@ class Loss:  # Common loss class
     def calculate(self, output, y, *, include_regularization=False):
         # calculate sample losses
         sample_losses = self.forward(output, y)
+
         # calculate mean loss
         data_loss = np.mean(sample_losses)
+
+        self.accumulated_sum += np.sum(sample_losses)
+        self.accumulated_count += len(sample_losses)
 
         # If just data loss, return it
         if not include_regularization:
             return data_loss
         return data_loss, self.regularization_loss()
+
+    def calculate_accumulated(self, *, include_regularzation=False):
+        # Calculate mean loss
+        data_loss = self.accumulated_sum / self.accumulated_count
+
+        # If just data loss - return it
+        if not include_regularzation:
+            return data_loss
+        return data_loss, self.regularization_loss()
+
+    def new_pass(self):
+        self.accumulated_sum = 0
+        self.accumulated_count = 0
 
 
 class LossCategoricalCrossEntropy(Loss):
