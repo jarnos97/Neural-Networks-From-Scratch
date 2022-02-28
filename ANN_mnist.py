@@ -53,7 +53,15 @@ model.finalize()
 
 # Train model
 model.train(X, y, validation_data=(X_test, y_test), epochs=10, batch_size=128, print_every=100)
-# model.train(X, y, validation_data=(X_test, y_test), epochs=400, print_every=100)
+
+# Retrieve and print parameters
+parameters = model.get_parameters()
+print(parameters)
+
+# Evaluate
+model.evaluate(X, y)
+model.evaluate(X_test, y_test)
+
 
 # TODO: If we want to try to execute on GPU, need to convert arrays to tensors
 # TODO: Make a sequential-like function!
