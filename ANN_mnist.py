@@ -53,10 +53,14 @@ model.finalize()
 
 # Train model
 model.train(X, y, validation_data=(X_test, y_test), epochs=10, batch_size=128, print_every=100)
+# model.load_parameters('mnist_parameters.pkl')
 
 # Retrieve and print parameters
 parameters = model.get_parameters()
-print(parameters)
+# print(parameters)
+
+# Save parameters
+# model.save_parameters(path='mnist_parameters.pkl')
 
 # Evaluate
 model.evaluate(X, y)

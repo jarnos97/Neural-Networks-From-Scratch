@@ -1,6 +1,7 @@
 from layers import LayerInput
 from activation_functions import ActivationSoftmax
 from loss import LossCategoricalCrossEntropy, ActivationSoftmaxLossCategoricalCrossentropy
+import pickle
 
 
 class Model:
@@ -126,7 +127,7 @@ class Model:
                 if not step % print_every or step == train_steps - 1:
                     print(f"epoch: {step}, " +
                           f"acc: {accuracy:.3f}, " +
-                          f"loss: {loss:.3f}," +
+                          f"loss: {loss:.3f}, " +
                           f"data_loss: {data_loss:.3f}, " +
                           f"reg_loss: {regularization_loss:.3f}, " +
                           f"lr: {self.optimizer.current_learning_rate:.3f}\n")
@@ -139,9 +140,9 @@ class Model:
             print(f'training, ' +
                   f'acc: {epoch_accuracy:.3f}, ' +
                   f'loss: {epoch_loss:.3f} ' +
-                  f'data_loss: {epoch_data_loss:.3f}' +
-                  f'reg_loss: {epoch_regularization_loss:.3f}' +
-                  f'lr: {self.optimizer.current_learning_rate}')
+                  f'data_loss: {epoch_data_loss:.3f} ' +
+                  f'reg_loss: {epoch_regularization_loss:.3f }' +
+                  f'lr: {self.optimizer.current_learning_rate}\n')
 
             # If there is validation data
             if validation_data is not None:
@@ -235,3 +236,10 @@ class Model:
         for parameter_set, layer in zip(parameters, self.trainable_layers):
             layer.set_parameters(*parameter_set)
 
+    def save_parameters(self, path: str):
+        with open(path, 'wb') as f:
+            pickle.dump(self.get_parameters(), f)
+
+    def load_parameters(self, path: str):
+        with open(path, 'rb') as f:
+            self.set_parameters(pickle.load(f))
