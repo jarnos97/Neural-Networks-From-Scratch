@@ -1,3 +1,7 @@
+import copy
+
+import numpy as np
+
 from layers import LayerInput
 from activation_functions import ActivationSoftmax
 from loss import LossCategoricalCrossEntropy, ActivationSoftmaxLossCategoricalCrossentropy
@@ -141,8 +145,8 @@ class Model:
                   f'acc: {epoch_accuracy:.3f}, ' +
                   f'loss: {epoch_loss:.3f} ' +
                   f'data_loss: {epoch_data_loss:.3f} ' +
-                  f'reg_loss: {epoch_regularization_loss:.3f }' +
-                  f'lr: {self.optimizer.current_learning_rate}\n')
+                  f'reg_loss: {epoch_regularization_loss:.3f} ' +
+                  f'lr: {round(self.optimizer.current_learning_rate, 5)}\n')
 
             # If there is validation data
             if validation_data is not None:
@@ -243,3 +247,60 @@ class Model:
     def load_parameters(self, path: str):
         with open(path, 'rb') as f:
             self.set_parameters(pickle.load(f))
+
+    def save(self, path: str):
+        # Make deep copy of model instance
+        model = copy.deepcopy(self)
+
+        # Reset accumulated values in loss and accuracy objects
+        model.loss.new_pass()
+        model.accuracy.new_pass()
+
+        # Remove data from input layer and gradients from loss object
+        model.input_layer.__dict__.pop('output', None)
+        model.loss.__dict__.pop('dinputs', None)
+
+        # For each layer remove inputs, output and dinputs
+        for layer in model.layers:
+            for property in ['inputs', 'outputs', 'dinputs', 'dweights', 'dbiases']:
+                layer.__dict__.pop(property, None)
+
+        # Save the model as pickle file
+        with open(path, 'wb') as f:
+            pickle.dump(model, f)
+
+    @staticmethod
+    def load(path: str):
+        # Read model file
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+
+    def predict(self, X, *, batch_size=None):
+        # Default value if batch size is not set
+        prediction_steps = 1
+
+        # Calculate num steps
+        if batch_size is not None:
+            prediction_steps = len(X) // batch_size
+            # Add 1 to include rounding down errors
+            if prediction_steps * batch_size < len(X):
+                prediction_steps += 1
+
+        # Model outputs
+        output = []
+
+        # Iterate over batches
+        for step in range(prediction_steps):
+            # If single batch - traing on full dataset
+            if batch_size is None:
+                batch_X = X
+            # Else slice batch
+            else:
+                batch_X = X[step*batch_size:(step+1)*batch_size]
+
+            # Forward pass
+            batch_output = self.forward(batch_X, training=False)
+            output.append(batch_output)
+
+        # Stack results before returning
+        return np.vstack(output)

@@ -1,6 +1,5 @@
 # Imports
 import os
-
 import numpy as np
 import nnfs
 from model import Model
@@ -53,21 +52,24 @@ model.finalize()
 
 # Train model
 model.train(X, y, validation_data=(X_test, y_test), epochs=10, batch_size=128, print_every=100)
-# model.load_parameters('mnist_parameters.pkl')
+# model.load_parameters('mnist.params')
 
 # Retrieve and print parameters
 parameters = model.get_parameters()
 # print(parameters)
 
 # Save parameters
-# model.save_parameters(path='mnist_parameters.pkl')
+# model.save_parameters(path='mnist.params')
+
+# Save model
+model.save('mnist.model')
 
 # Evaluate
 model.evaluate(X, y)
 model.evaluate(X_test, y_test)
 
 
-# TODO: If we want to try to execute on GPU, need to convert arrays to tensors
+# TODO: Try to execute on GPU? Need to convert arrays to tensors
 # TODO: Make a sequential-like function!
 # TODO: make bias optional
 # TODO: add different ways to initialize the weights
